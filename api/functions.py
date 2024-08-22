@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from models import Season, Episode, Show, StreamingService
+from api.models import Season, Episode, Show, ShowsResponse, StreamingService
 
 
 class EurostreamingWorker:
@@ -42,15 +42,15 @@ class EurostreamingWorker:
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
                     showList.append(
-                        {"title": name, "url": url, "image": image})
+                        Show(title=name, url=url, image=image))
 
                 maxPages = soup.find(
                     "div", {"class": "navigation"}).find_all("a")[-2].text
-                return {"shows": showList, "maxPages": maxPages, "status": True}
+                return ShowsResponse(shows=showList, maxPages=maxPages, status=True)
             else:
-                return {"shows": [], "maxPages": 0, "status": False}
+                return ShowsResponse(shows=[], maxPages=0, status=False)
         except:
-            return {"shows": [], "maxPages": 0, "status": False}
+            return ShowsResponse(shows=[], maxPages=0, status=False)
 
     def searchShows(self, query, page=1):
         url = self.url + "/page/" + str(page) + "/?s=" + query
@@ -68,92 +68,114 @@ class EurostreamingWorker:
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
                     showList.append(
-                        {"title": name, "url": url, "image": image})
+                        Show(title=name, url=url, image=image))
                 if len(showList) > 0:
                     maxPages = soup.find(
                         "div", {"class": "navigation"}).find_all("a")[-2].text
                 else:
                     maxPages = 0
 
-                return {"shows": showList, "maxPages": maxPages, "status": True}
+                return ShowsResponse(shows=showList, maxPages=maxPages, status=True)
             else:
-                return {"shows": [], "maxPages": 0, "status": False}
+                return ShowsResponse(shows=[], maxPages=0, status=False)
         except:
-            return {"shows": [], "maxPages": 0, "status": False}
+            return ShowsResponse(shows=[], maxPages=0, status=False)
 
-    def getShow(self, url_path):
+    def getSeasons(self, html):
+        seasons = []
+        seasonNames = html.find_all("div", {"class": "su-spoiler-title"})
+        episodes = html.find_all("div", {"class": "su-spoiler-content"})
+
+        for i in range(len(seasonNames)):
+            seasonName = seasonNames[i].text.strip()
+            seasonEpisodeList = []
+
+            current_episode = None
+            episode_name_buffer = ""  # Buffer per memorizzare il nome dell'episodio
+            collecting_title = False  # Flag per iniziare la raccolta del titolo
+            for content in episodes[i].contents:
+                # Se troviamo un tag <strong> con il numero dell'episodio, iniziamo a processare un nuovo episodio
+                if content.name == "strong" and "×" in content.text:
+                    if current_episode:
+                        seasonEpisodeList.append(current_episode)
+
+                    episode_title = content.text.strip().replace("–", "-").replace("-", "").strip()
+
+                    print(f"Processing episode title from <strong>: {episode_title}")
+
+                    episode_parts = episode_title.split(" ", 1)
+                    episode_number = episode_parts[0]
+                    episode_name_buffer = episode_parts[1] if len(episode_parts) > 1 else ""
+
+                    current_episode = Episode(episodeNumber=episode_number, title=episode_name_buffer, urls=[])
+                    collecting_title = True if not episode_name_buffer else False  # Se il titolo non è completo, continua a raccogliere
+                    
+                # Se il flag collecting_title è attivo, continua a raccogliere il titolo
+                elif collecting_title and content.name is None and content.strip():
+                    episode_name_buffer += " " + content.strip()
+                    current_episode.title = episode_name_buffer.strip()
+                    # Replace – with - and remove any extra spaces
+                    current_episode.title = current_episode.title.replace("–", "-").replace("-", "").strip()
+                    
+                    collecting_title = False  # Una volta trovato il titolo completo, disattiva il flag
+                
+                # Gestione del titolo dell'episodio non racchiuso in <strong>
+                elif content.name is None and "×" in content:
+                    if current_episode:
+                        seasonEpisodeList.append(current_episode)
+                    episode_title = content.strip().replace("–", "-").replace("-", "").strip()
+
+                    print(f"Processing episode title: {episode_title}")
+
+                    episode_parts = episode_title.split(" ", 1)
+                    episode_number = episode_parts[0]
+                    episode_name = episode_parts[1] if len(episode_parts) > 1 else ""
+
+                    current_episode = Episode(episodeNumber=episode_number, title=episode_name, urls=[])
+                    collecting_title = False  # Non raccogliere ulteriori parti del titolo
+                
+                elif content.name == "a" and current_episode:
+                    server_name = content.text.strip()
+                    server_url = content["href"]
+                    current_episode.urls.append(StreamingService(name=server_name, url=server_url))
+                
+                elif content.name == "br" and current_episode:
+                    if current_episode:
+                        seasonEpisodeList.append(current_episode)
+                        current_episode = None
+
+            if current_episode:
+                seasonEpisodeList.append(current_episode)
+
+            seasons.append(Season(season=seasonName, episodes=seasonEpisodeList))
+        return seasons
+
+
+
+    def getShow(self, url_path, alsoEpisodes=False):
         fullUrl = self.url + url_path
         try:
-            r = requests.get(fullUrl, headers=self.headers,
-                             timeout=self.timeout)
+            r = requests.get(fullUrl, headers=self.headers, timeout=self.timeout)
+            
             if r.status_code == 200:
                 soup = BeautifulSoup(r.text, "html.parser")
                 show = soup.find("div", {"class": "post"})
                 name = show.find("h1", {"class": "entry-title"}).text
                 image = show.find("img")["src"]
-                # Get the second p and the first span inside entry-content and merge the two texts
-                # TODO: Fix this because it cut the first part
-                description = show.find(
-                    "div", {"class": "entry-content"}).find_all("span")[0].text
-                # Remove "continua a leggere" text
-                description = description.replace("Continua a leggere.", "")
-                # Remove firsts spaces
-                description = description.strip()
 
-                link = show.find(
-                    "h1", {"class": "entry-title"}).find("a")["href"]
+                description = show.find("div", {"class": "entry-content"}).find_all("span")[0].text
+                description = description.replace("Continua a leggere.", "").strip()
+
+                link = show.find("h1", {"class": "entry-title"}).find("a")["href"]
                 
-                # Structure: "Season 1": [{"title": "Episode 1", "urls": {"server1": "url1", "server2": "url2"}}]
-                # Find all su-spoiler-title that are a callout
-                # # The episode name is the text before the a tag and the streaming services are all the a tags until the next text
-                # Trovare le stagioni
-                seasons = []
-
-                # Trovare le stagioni
-                seasonNames = show.find_all("div", {"class": "su-spoiler-title"})
-                # Trovare gli episodi associati alle stagioni
-                episodes = show.find_all("div", {"class": "su-spoiler-content"})
-
-                for i in range(len(seasonNames)):
-                    seasonName = seasonNames[i].text.strip()
-
-                    seasonEpisodeList = []
-
-                    current_episode = None
-                    for content in episodes[i].contents:
-                        # Se il contenuto è un testo e contiene un episodio
-                        if content.name is None and "×" in content:
-                            if current_episode:
-                                seasonEpisodeList.append(current_episode)
-                            episode_title = content.strip().replace("–", "-").replace("-", "").strip()
-                            episode_parts = episode_title.split(" ", 1)  # Divide in numero e nome
-                            episode_number = episode_parts[0]
-                            episode_name = episode_parts[1] if len(episode_parts) > 1 else ""
-                            current_episode = Episode(episodeNumber=episode_number, title=episode_name, urls=[])
-                       
-                        elif content.name == "a" and current_episode:
-                            server_name = content.text.strip()
-                            server_url = content["href"]
-                            current_episode.urls.append(StreamingService(name=server_name, url=server_url))
-                        
-                        elif content.name == "br" and current_episode:
-                            # Fine di un episodio
-                            if current_episode:
-                                seasonEpisodeList.append(current_episode)
-                                current_episode = None
-
-                    # Aggiungere l'ultimo episodio della stagione
-                    if current_episode:
-                        seasonEpisodeList.append(current_episode)
-
-                    # Aggiungere la stagione alla lista principale
-                    seasons.append(Season(season=seasonName, episodes=seasonEpisodeList))
-
-
-
-                return {"title": name, "image": image, "description": description, "url": link, "seasons": seasons, "status": True}
+                if not alsoEpisodes:
+                    return Show(title=name, image=image, description=description, url=link, status=True)
+                
+                seasons = self.getSeasons(show)
+                
+                return Show(title=name, image=image, description=description, url=link, seasons=seasons, status=True)
             else:
-                return {"title": "", "image": "", "description": "", "link": "", "status": False}
+                return Show(title="", image="", description="", url="", status=False)
         except Exception as e:
             print(e)
-            return {"title": "", "image": "", "description": "", "link": "", "status": False}
+            return Show(title="", image="", description="", url="", status=False)

@@ -19,8 +19,10 @@ class Show(BaseModel):
     image: str = None
     description: str = None
     seasons: list[Season] = None
+    status: bool = False
 
-class ShowResponse(BaseModel):
+class ShowsResponse(BaseModel):
     shows: list[Show]
     maxPages: int
+    status: bool = False
 

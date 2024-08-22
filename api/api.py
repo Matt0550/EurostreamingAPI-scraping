@@ -1,4 +1,5 @@
 import datetime
+
 from fastapi import FastAPI
 from typing import Any, List
 
@@ -10,8 +11,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import Response
 
-from models import Show, ShowResponse
-from functions import EurostreamingWorker
+from api.models import Show, ShowsResponse
+from api.functions import EurostreamingWorker
 
 
 # New response structure: {"details": ..., "status_code": ...}
@@ -19,7 +20,6 @@ class ResponseStructure(BaseModel):
     details: Any
     success: bool = True
     status_code: int
-
 
 # New response class
 class CustomResponse(JSONResponse):
@@ -81,44 +81,44 @@ def api_status(request: Request):
     return {"api": {"status": "online", "uptime": uptime, "url": url}, "eurostreaming": {"online": eurostreamingWorker.checkStatus()}}
 
 @app.get("/shows/{page}")
-async def get_shows(response: Response, page: int, response_model=ShowResponse):
+async def get_shows(response: Response, page: int, response_model=ShowsResponse):
     # Get the shows from the Eurostreaming website
     shows = eurostreamingWorker.getShows(page)
     
-    if shows["status"]:
+    if shows.status:
         # Return a list of Show objects
-        return ShowResponse(shows=shows["shows"], maxPages=shows["maxPages"])
+        return ShowsResponse(shows=shows.shows, maxPages=shows.maxPages)
     else:
         # Return an empty list
         response.status_code = 404
-        return ShowResponse([], -1)
+        return ShowsResponse([], -1, False)
     
 @app.get("/search")
-async def search_shows(response: Response, q: str, page: int = 0, response_model=ShowResponse):
+async def search_shows(response: Response, q: str, page: int = 0, response_model=ShowsResponse):
     # Search for shows from the Eurostreaming website
     shows = eurostreamingWorker.searchShows(q, page)
     
-    if shows["status"]:
+    if shows.status:
         # Return a list of Show objects
-        return ShowResponse(shows=shows["shows"], maxPages=shows["maxPages"])
+        return ShowsResponse(shows=shows.shows, maxPages=shows.maxPages)
     else:
         # Return an empty list
         response.status_code = 404
-        return ShowResponse([], -1)
+        return ShowsResponse([], -1, False)
     
 @app.get("/show")
-async def get_show(response: Response, path: str, response_model=Show):
+async def get_show(response: Response, path: str, alsoEpisodes: bool = True, response_model=Show):
     # Parse path add first / if not present
     if path[0] != "/":
         path = "/" + path
         
     # Get the show from the Eurostreaming website
-    show = eurostreamingWorker.getShow(path)
+    show = eurostreamingWorker.getShow(path, alsoEpisodes)
     
-    if show["status"]:
+    if show.status:
         # Return a Show object
-        return Show(**show)
+        return show
     else:
         # Return an empty Show object
         response.status_code = 404
-        return Show(title="", url="", image="")
+        return Show(title="", url="", image="", status=False)
