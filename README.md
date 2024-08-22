@@ -9,7 +9,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Matt0550/EurostreamingAPI-scraping">
-    <img src="logo.png" alt="Logo" height="40" style="filter: invert(1);">
+    <img src="logo.png" alt="Logo" height="40">
   </a>
 
   <h3 align="center">Eurostreaming Unofficial REST API & WebApp</h3>
