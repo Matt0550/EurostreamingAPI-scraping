@@ -10,6 +10,7 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.models import Show, ShowsResponse
 from api.functions import EurostreamingWorker
@@ -29,7 +30,17 @@ class CustomResponse(JSONResponse):
         super().__init__(content=content.dict(), status_code=status_code, *args, **kwargs)
 
 
-app = FastAPI(default_response_class=CustomResponse)
+app = FastAPI(default_response_class=CustomResponse, title="Eurostreaming Unofficial API", description="An unofficial API for Eurostreaming website", version="1.0.0")
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UP_START_TIME = datetime.datetime.now() # For the uptime
 
