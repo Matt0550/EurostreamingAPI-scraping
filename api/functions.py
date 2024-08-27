@@ -3,13 +3,12 @@ from bs4 import BeautifulSoup
 
 from api.models import Season, Episode, Show, ShowsResponse, StreamingService
 
-
 class EurostreamingWorker:
     def __init__(self):
         # autoUrl = requests.get("https://api.matt05.ml/streaming-api/v1/eurostreaming")
         # Get json data
         # self.url = autoUrl.json()["message"]
-        self.url = "https://eurostreaming.charity"
+        self.url = "https://eurostreaming.recipes"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
@@ -41,18 +40,20 @@ class EurostreamingWorker:
                     name = show.find("h2").text
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
+                    path = url.replace(self.url, "")
                     showList.append(
-                        Show(title=name, url=url, image=image))
+                        Show(title=name, url=url, image=image, path=path))
 
                 maxPages = soup.find(
                     "div", {"class": "navigation"}).find_all("a")[-2].text
-                return ShowsResponse(shows=showList, maxPages=maxPages, status=True)
+                return ShowsResponse(shows=showList, maxPages=maxPages)
             else:
-                return ShowsResponse(shows=[], maxPages=0, status=False)
+                return ShowsResponse(shows=[], maxPages=0)
         except:
-            return ShowsResponse(shows=[], maxPages=0, status=False)
+            return ShowsResponse(shows=[], maxPages=0)
 
-    def searchShows(self, query, page=1):
+    def searchShows(self, query, page=0):        
+        query = query.replace(" ", "+")
         url = self.url + "/page/" + str(page) + "/?s=" + query
         try:
             r = requests.get(url, headers=self.headers, timeout=self.timeout)
@@ -67,19 +68,23 @@ class EurostreamingWorker:
                     name = show.find("h2").text
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
+                    path = url.replace(self.url, "")
                     showList.append(
-                        Show(title=name, url=url, image=image))
-                if len(showList) > 0:
-                    maxPages = soup.find(
-                        "div", {"class": "navigation"}).find_all("a")[-2].text
+                        Show(title=name, url=url, image=image, path=path))
+                
+                maxPages = soup.find(
+                        "div", {"class": "navigation"}).find_all("a")
+                if maxPages:
+                    maxPages = maxPages[-2].text
                 else:
-                    maxPages = 0
-
-                return ShowsResponse(shows=showList, maxPages=maxPages, status=True)
+                    maxPages = 1
+               
+                return ShowsResponse(shows=showList, maxPages=maxPages)
             else:
-                return ShowsResponse(shows=[], maxPages=0, status=False)
-        except:
-            return ShowsResponse(shows=[], maxPages=0, status=False)
+                return ShowsResponse(shows=[], maxPages=0)
+        except Exception as e:
+            print(e)
+            return ShowsResponse(shows=[], maxPages=0)
 
     def getSeasons(self, html):
         seasons = []
@@ -169,13 +174,13 @@ class EurostreamingWorker:
                 link = show.find("h1", {"class": "entry-title"}).find("a")["href"]
                 
                 if not alsoEpisodes:
-                    return Show(title=name, image=image, description=description, url=link, status=True)
+                    return Show(title=name, image=image, description=description, url=link, path=url_path)
                 
                 seasons = self.getSeasons(show)
                 
-                return Show(title=name, image=image, description=description, url=link, seasons=seasons, status=True)
+                return Show(title=name, image=image, description=description, url=link, path=url_path, seasons=seasons)
             else:
-                return Show(title="", image="", description="", url="", status=False)
+                return Show(title="")
         except Exception as e:
             print(e)
-            return Show(title="", image="", description="", url="", status=False)
+            return Show(title="")

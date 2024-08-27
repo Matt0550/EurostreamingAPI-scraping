@@ -96,26 +96,28 @@ async def get_shows(response: Response, page: int, response_model=ShowsResponse)
     # Get the shows from the Eurostreaming website
     shows = eurostreamingWorker.getShows(page)
     
-    if shows.status:
+    if shows.shows:
         # Return a list of Show objects
         return ShowsResponse(shows=shows.shows, maxPages=shows.maxPages)
     else:
         # Return an empty list
         response.status_code = 404
-        return ShowsResponse([], -1, False)
+        return ShowsResponse([], 0, False)
     
 @app.get("/search")
 async def search_shows(response: Response, q: str, page: int = 0, response_model=ShowsResponse):
-    # Search for shows from the Eurostreaming website
-    shows = eurostreamingWorker.searchShows(q, page)
+    print(q)
     
-    if shows.status:
+    # Search for shows from the Eurostreaming website
+    shows = eurostreamingWorker.searchShows(query=q, page=page)
+    
+    if shows.shows:
         # Return a list of Show objects
         return ShowsResponse(shows=shows.shows, maxPages=shows.maxPages)
     else:
         # Return an empty list
         response.status_code = 404
-        return ShowsResponse([], -1, False)
+        return ShowsResponse(shows=[], maxPages=0)
     
 @app.get("/show")
 async def get_show(response: Response, path: str, alsoEpisodes: bool = True, response_model=Show):
@@ -126,10 +128,10 @@ async def get_show(response: Response, path: str, alsoEpisodes: bool = True, res
     # Get the show from the Eurostreaming website
     show = eurostreamingWorker.getShow(path, alsoEpisodes)
     
-    if show.status:
+    if show:
         # Return a Show object
         return show
     else:
         # Return an empty Show object
         response.status_code = 404
-        return Show(title="", url="", image="", status=False)
+        return Show(title="", url="", image="")

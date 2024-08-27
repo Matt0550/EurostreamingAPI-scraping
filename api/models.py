@@ -16,13 +16,10 @@ class Season(BaseModel):
 class Show(BaseModel):
     title: str
     url: str = None
+    path: str = None
     image: str = None
     description: str = None
     seasons: list[Season] = None
-    status: bool = False
-
 class ShowsResponse(BaseModel):
-    shows: list[Show]
+    shows: list[Show] = []
     maxPages: int
-    status: bool = False
-
