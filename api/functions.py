@@ -5,10 +5,10 @@ from api.models import Season, Episode, Show, ShowsResponse, StreamingService
 
 class EurostreamingWorker:
     def __init__(self):
-        # autoUrl = requests.get("https://api.matt05.ml/streaming-api/v1/eurostreaming")
+        autoUrl = requests.get("https://streaming.cloud.matteosillitti.it/v1/eurostreaming")
         # Get json data
-        # self.url = autoUrl.json()["message"]
-        self.url = "https://eurostreaming.recipes"
+        self.url = autoUrl.json()["message"]
+        #self.url = "https://eurostreaming.recipes"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
@@ -154,8 +154,6 @@ class EurostreamingWorker:
 
             seasons.append(Season(season=seasonName, episodes=seasonEpisodeList))
         return seasons
-
-
 
     def getShow(self, url_path, alsoEpisodes=False):
         fullUrl = self.url + url_path
