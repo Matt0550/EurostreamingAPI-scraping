@@ -7,10 +7,14 @@ if [ ! -z "$PUID" ] && [ ! -z "$PGID" ]; then
     usermod -u $PUID -g $PGID $APP_USER
 
     chown -R $PUID:$PGID /home/api
+    # Workdir
+    cd /home/api
 
-    exec gosu $APP_USER cd /home/api && uvicorn api:app --port $PORT
+    exec gosu $APP_USER uvicorn api:app --port $PORT
 else
     chown -R 0:0 /home/api
     
-    exec cd /home/api && uvicorn api:app --port $PORT
+    # Workdir
+    cd /home/api
+    exec uvicorn api:app --port $PORT
 fi
