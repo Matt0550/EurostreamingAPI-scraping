@@ -53,7 +53,7 @@ A WebApp is now available as a Telegram Mini App. Check out the repository [here
 
 Demo video:
 
-https://raw.githubusercontent.com/Matt0550/public-gaac/main/uploads/demo_eurostreaming_telegram_bot.mp4
+https://github.com/user-attachments/assets/38c202f8-6bcc-4983-8847-cf5aaf0d9d2a
 
 ## TO-DO
 - [X] Add Dockerfile
