@@ -12,11 +12,11 @@ from fastapi.requests import Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.models import Show, ShowsResponse
-from api.functions import EurostreamingWorker
+from models import Show, ShowsResponse
+from functions import EurostreamingWorker
 
 
-# New response structure: {"details": ..., "status_code": ...}
+# New response structure: {"details": ..., "status_code": ..., "success": ...}
 class ResponseStructure(BaseModel):
     details: Any
     success: bool = True

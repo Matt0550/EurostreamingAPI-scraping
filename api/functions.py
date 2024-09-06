@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from api.models import Season, Episode, Show, ShowsResponse, StreamingService
+from models import Season, Episode, Show, ShowsResponse, StreamingService
 
 class EurostreamingWorker:
     def __init__(self):

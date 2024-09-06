@@ -18,6 +18,9 @@ RUN groupadd -g ${APP_GID} ${APP_USER} && \
 
 RUN apt-get update && apt-get install -y gosu dos2unix
 
+# Install build tools
+RUN apt-get install -y build-essential
+
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
