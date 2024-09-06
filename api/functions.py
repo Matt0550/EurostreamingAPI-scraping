@@ -106,8 +106,6 @@ class EurostreamingWorker:
 
                     episode_title = content.text.strip().replace("–", "-").replace("-", "").strip()
 
-                    print(f"Processing episode title from <strong>: {episode_title}")
-
                     episode_parts = episode_title.split(" ", 1)
                     episode_number = episode_parts[0]
                     episode_name_buffer = episode_parts[1] if len(episode_parts) > 1 else ""
