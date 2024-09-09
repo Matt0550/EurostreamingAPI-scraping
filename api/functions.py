@@ -128,8 +128,6 @@ class EurostreamingWorker:
                         seasonEpisodeList.append(current_episode)
                     episode_title = content.strip().replace("–", "-").replace("-", "").strip()
 
-                    print(f"Processing episode title: {episode_title}")
-
                     episode_parts = episode_title.split(" ", 1)
                     episode_number = episode_parts[0]
                     episode_name = episode_parts[1] if len(episode_parts) > 1 else ""
@@ -139,8 +137,9 @@ class EurostreamingWorker:
                 
                 elif content.name == "a" and current_episode:
                     server_name = content.text.strip()
-                    server_url = content["href"]
-                    current_episode.urls.append(StreamingService(name=server_name, url=server_url))
+                    if "href" in content.attrs:
+                        server_url = content["href"]
+                        current_episode.urls.append(StreamingService(name=server_name, url=server_url))
                 
                 elif content.name == "br" and current_episode:
                     if current_episode:

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 class StreamingService(BaseModel):
     name: str
-    url: str
+    url: str = None
 
 class Episode(BaseModel):
     episodeNumber: str
