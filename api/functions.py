@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
@@ -40,7 +41,8 @@ class EurostreamingWorker:
                     name = show.find("h2").text
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
-                    path = url.replace(self.url, "")
+                    parsed_url = urlparse(url)
+                    path = parsed_url.path
                     showList.append(
                         Show(title=name, url=url, image=image, path=path))
 
@@ -68,7 +70,8 @@ class EurostreamingWorker:
                     name = show.find("h2").text
                     url = show.find("a")["href"]
                     image = show.find("img")["src"]
-                    path = url.replace(self.url, "")
+                    parsed_url = urlparse(url)
+                    path = parsed_url.path
                     showList.append(
                         Show(title=name, url=url, image=image, path=path))
                 
