@@ -174,6 +174,22 @@ class EurostreamingWorker:
                 if not alsoEpisodes:
                     return Show(title=name, image=image, description=description, url=link, path=url_path)
                 
+                # check if there is "clicca qui per aprire gli episodi" button class nano_cp_button. If so, find in the page a link that contains "episodi" in the link
+                button = show.find("span", {"class": "nano_cp_button"})
+                if button:
+                    # Find a script with id nano_cp_script-js-extra
+                    script = soup.find("script", {"id": "nano_cp_script-js-extra"})
+
+                    # Inside the script find a tag "go_to": "" and get the val
+                    go_to = script.text.split("go_to")[1].split('"')[2]
+                    go_to = go_to.replace("\\", "")
+                    
+                    # Get the new page and get only the episodes
+                    r = requests.get(go_to, headers=self.headers, timeout=self.timeout)
+                    soup = BeautifulSoup(r.text, "html.parser")
+                    show = soup.find("div", {"class": "post-entry"})
+            
+
                 seasons = self.getSeasons(show)
                 
                 return Show(title=name, image=image, description=description, url=link, path=url_path, seasons=seasons)
