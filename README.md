@@ -63,7 +63,8 @@ https://github.com/user-attachments/assets/38c202f8-6bcc-4983-8847-cf5aaf0d9d2a
 
 
 ## Public instance of the API
-Unfortunately, I can't provide a public instance of the API because scraping is not a good practice and it's illegal in some cases. You can host your own instance of the API using the instructions below.
+Currently, I’m unable to provide a public instance of the API because web scraping is not permitted by the Eurostreaming website and is considered unethical. To avoid any potential issues or conflicts, I’ve decided not to make the bot publicly accessible. I apologize for any inconvenience this may cause and appreciate your understanding.
+
 
 ## Environment Variables (docker)
 | Variable | Description | Default |
@@ -112,14 +113,13 @@ Go to the project directory
 ```
 
 OPTIONAL: use docker to build the image
+If you don't want to use docker, you can just go ahead and skip this step.
+Otherwise, change the `image` in `docker-compose.yml` with the image name you used.
+Run the container with `docker-compose up -d`
 
 ```bash
   docker build -t eurostreamingAPI-scraping .
 ```
-
-If you don't want to use docker, skip this step.
-Else, change the `image` in `docker-compose.yml` with the image name you used.
-Run the container with `docker-compose up -d`
 
 Install dependencies
 
@@ -137,11 +137,11 @@ Start the REST API (after setting the environment variables)
 ## Help - feedback
 You can contact me on:
 
-Discord: https://go.matteosillitti.it/discord
+Discord: https://matt05.it/discord
 
-Telegram: https://go.matteosillitti.it/telegram
+Telegram: https://matt05.it/telegram
 
-Mail: <a href="mailto:mail@matteosillitti.it">me@matteosillitti.it</a>
+Mail: <a href="mailto:mail@matteosillitti.com">mail@matteosillitti.com</a>
 
 ## License
 
@@ -166,6 +166,6 @@ Mail: <a href="mailto:mail@matteosillitti.it">me@matteosillitti.it</a>
 [license-shield]: https://img.shields.io/github/license/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
 [license-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/blob/master/LICENSE
 [discord-shield]: https://img.shields.io/discord/828990499507404820?style=for-the-badge
-[discord-url]: https://go.matteosillitti.it/discord
+[discord-url]: https://matt05.it/discord
 [docker-shield]: https://img.shields.io/docker/pulls/matt0550/eurostreamingapi-scraping?style=for-the-badge
 [docker-url]: https://hub.docker.com/r/matt0550/eurostreamingapi-scraping
